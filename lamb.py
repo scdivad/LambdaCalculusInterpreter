@@ -47,28 +47,3 @@ def parse(s, simpl=False):
     if simpl:
         return eval_expr("".join(stack))
     return "".join(stack)
-
- 
-# maybe validate parentheses of input too 
-val = input("Enter your value: ")
-# val = '(lx[x^2-2*x+5])2'
-# val = '(λa[(lb[a^2+b^2])b])3'
-# val = '(λx[x])y'
-# val = '((λx.λy.y)a)b'
-# val = '((lx[ly[y]])a)b'
-# val = λx([λy([(λz[x(yz)])z)y]])x
-# ((lx[ly[y]])a)b
-# ([ly[y]])b
-# stack solution is the way to go for now
-res = parse(val)
-if not res:
-    print("error")
-else:
-    print(res)
-
-
-'''
-((λx.λy.y)a)b
-(λy.y)b
-
-'''
