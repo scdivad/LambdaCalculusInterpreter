@@ -1,14 +1,16 @@
 from lamb import *
 
-# val = '(λx[x^2-2*x+5])(2)'
+# val = '(λx[x^2-2*x+5])2'
 # assert int(parse(val, True)) == 5
 # print('TC 0 PASSED')
 
-val = '(λx[x^2-2*x+5])2'
-assert int(parse(val, True)) == 5
-print('TC 1 PASSED')
+# val = '(λx[x^2-2*x+5])2'
+# assert int(parse(val, True)) == 5
+# print('TC 1 PASSED')
 
+# λa[(λb[a^2+b^2])(b)])(3)
 val = '(λa[(λb[a^2+b^2])b])3'
+print("parse res: ", parse(val))
 assert parse(val) == '3^2+b^2'
 print('TC 2 PASSED')
 
@@ -24,7 +26,11 @@ print('TC 4 PASSED')
 # 2.2 Combinators 
 https://plato.stanford.edu/entries/lambda-calculus/
 '''
-val = 'λx[λy[λz[xz(yz)]]]'
+# val = '(λx[λy[λz[xz(yz)]]])'
+
+val = '(λx[(λy[(λz[xz(yz)])z])y])x'
+print(parse(val))
+exit(0)
 assert parse(val) == 'xz(yz)'
 print('TC 5 PASSED')
 
@@ -46,3 +52,9 @@ print('TC 7 PASSED')
 # print('arg: ', arg)
 
 # print("sent to eval: " + expression)
+
+'''
+(λa[(λb[a^2+b^2])b])3
+
+
+'''

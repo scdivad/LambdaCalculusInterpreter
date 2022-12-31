@@ -10,59 +10,96 @@ def eval_expr(expression):
     ret = ret.replace('**', '^')
     return ret
 
-def parse(s, simpl=False):
-    # case where s has free variables
+def parse_single_expression(s):
+    i = s.find(LAMBDA)
+    if i == -1: return (None, None)
+    # assert i == 2 # todo: make O(1)
+    term = s[i + 1 : s.find('[', i)]
+    body = s[s.find('[') + 1 : s.rfind(']')]
+    return (body, term)
+
+def get_matching_idx(s, lst):
+    stack = []
+    for i, c in enumerate(s):
+        if c == '(' or c == '[':
+            stack.append(i)
+        elif c == ')' or c == ']':
+            lst[stack[-1]] = i
+            lst[i] = stack[-1]
+            stack.pop()
+
+def format_args_paren(s):
+    t = ""
+    imbalance = 0
     i = 0
     while i < len(s):
-        if s[i] == LAMBDA:
-            term = s[i + 1 : s.find('[', i)]
-            close_idx = s.find('[', i) # (λz[z]
-            imbalance = 0
-            for j in range(close_idx, len(s)):
-                if s[j] == '[':
-                    imbalance += 1
-                elif s[j] == ']':
-                    imbalance -= 1
-                if not imbalance:
-                    close_idx = j
-                    break
-            if close_idx + 2 >= len(s) or (not s[close_idx + 2].isalnum() and not s[close_idx + 2] == '('):
-                s = s[0 : i] + '(' + s[i : close_idx+1] + ")" + term + s[close_idx+1 : ]
-                i += 2
-        i += 1
-    print("s", s)
+        if s[i].isalnum() and (s[i - 1] == ')' or not i):
+            t += '('
+            while i < len(s) and s[i].isalnum():
+                t += s[i]
+                i += 1
+            t += ')'
+        else:
+            t += s[i]
+            i += 1
+    return t
+
+def parse(s, simpl=False):
+    # case where s has free variables
+    s = format_args_paren(s)
+    print("format 2: ", s)
+    # print(s)
+    # exit(0)
+
+    matching_idx = [-1] * len(s)
+    get_matching_idx(s, matching_idx)
+
+    res = ""
+    expressions = []
     stack = []
-    # todo: did we ever account for chains like ()()()
-    # problem is that order matters, so naive recursion wont work ...
-    # what if we process it in the loop after?
-    # no, just parse yourself and look inside the stack and update the last element by replacing
-    for i in range(0, len(s)):
-        if s[i - 1] == ')' and s[i].isalnum():
-            stack.pop() # remove )
-            stack.pop() # remove ]
+    i = 0
+    while i < len(s):
+        # todo: if the lambda on the stack
+        # turns out to not have an argument
+        # then treat it as if the argument is the term
+        
 
-            end_arg_idx = i
-            while end_arg_idx < len(s) and s[end_arg_idx].isalnum():
-                end_arg_idx += 1
-            arg = s[i : end_arg_idx]
+        if s[i] == '(' and (stack and stack[-1] == ')'):
+            argument = s[i+1 : matching_idx[i]]
 
-            # find matching opening bracket
-            imbalance = 1 
-            curr = ""
+            curr = ")"
+            imbalance = 1
+            stack.pop()
             while imbalance:
                 if stack[-1] == '(': imbalance -= 1
-                elif stack[-1] == ')': imbalance += 1
-                if imbalance:
-                    curr = stack[-1] + curr
-                stack.pop()
+                if stack[-1] == ')': imbalance += 1
+                curr = stack.pop() + curr
             
-            lambda_term = curr[1 : curr.find('[')]
-            curr = curr[curr.find('[') + 1 :]
-            
-            stack.append(curr.replace(lambda_term, arg))
+            body, term = parse_single_expression(curr)
+            if not body: # could be more efficient
+                # is not a lambda expression
+                stack.append(curr)
+                print("append curr: ", curr)
+                stack.append('(')
+                for c in argument:
+                    stack.append(c)
+                stack.append(')')
+                i = matching_idx[i] + 1
+                continue
+
+            # todo: check if alpha is needed
+
+            # argument and body exist, perform beta
+            curr = body.replace(term, argument)
+            for c in curr:
+                stack.append(c)
+            # print(stack)
+            # print('end')
+
+            i = matching_idx[i] + 1
         else:
             stack.append(s[i])
-    
+            i += 1
     if simpl:
         return eval_expr("".join(stack))
     return "".join(stack)
